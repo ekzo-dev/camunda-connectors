@@ -5,7 +5,7 @@
     <parent>
         <groupId>dev.ekzo.camunda.connector</groupId>
         <artifactId>ekzo-connectors-parent</artifactId>
-        <version>0.1.0-SNAPSHOT</version>
+        <version>0.1.0</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -17,11 +17,98 @@
             <groupId>io.camunda.connector</groupId>
             <artifactId>spring-boot-starter-camunda-connectors</artifactId>
             <version>${version.connectors}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-autoconfigure</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot</artifactId>
+            <version>${version.spring-boot}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-autoconfigure</artifactId>
+            <version>${version.spring-boot}</version>
         </dependency>
 
         <dependency>
             <groupId>io.camunda.connector</groupId>
+            <artifactId>connector-http-json</artifactId>
+            <version>${version.connectors}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.camunda.connector</groupId>
+            <artifactId>connector-graphql</artifactId>
+            <version>${version.connectors}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.camunda.connector</groupId>
+            <artifactId>connector-rabbitmq</artifactId>
+            <version>${version.connectors}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.camunda.connector</groupId>
+            <artifactId>connector-sendgrid</artifactId>
+            <version>${version.connectors}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.camunda.connector</groupId>
+            <artifactId>connector-aws-sns</artifactId>
+            <version>${version.connectors}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.camunda.connector</groupId>
+            <artifactId>connector-aws-sqs</artifactId>
+            <version>${version.connectors}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.camunda.connector</groupId>
+            <artifactId>connector-kafka</artifactId>
+            <version>${version.connectors}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.camunda.connector</groupId>
+            <artifactId>connector-microsoft-teams</artifactId>
+            <version>${version.connectors}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.camunda.connector</groupId>
+            <artifactId>connector-aws-dynamodb</artifactId>
+            <version>${version.connectors}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.camunda.connector</groupId>
+            <artifactId>connector-aws-lambda</artifactId>
+            <version>${version.connectors}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.camunda.connector</groupId>
+            <artifactId>connector-google-sheets</artifactId>
+            <version>${version.connectors}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.camunda.connector</groupId>
+            <artifactId>connector-slack</artifactId>
+            <version>${version.connectors}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.camunda.connector</groupId>
             <artifactId>connector-webhook</artifactId>
+            <version>${version.connectors}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.camunda.connector</groupId>
+            <artifactId>connector-http-polling</artifactId>
             <version>${version.connectors}</version>
         </dependency>
         <dependency>
