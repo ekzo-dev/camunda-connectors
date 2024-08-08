@@ -41,6 +41,14 @@
             <version>${version.spring-boot}</version>
         </dependency>
 
+
+        <dependency>
+            <groupId>io.camunda.connector</groupId>
+            <artifactId>connector-core</artifactId>
+            <version>${version.connectors}</version>
+        </dependency>
+
+
         <dependency>
             <groupId>io.camunda.connector</groupId>
             <artifactId>connector-http-json</artifactId>
