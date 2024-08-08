@@ -1,0 +1,243 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>dev.ekzo.camunda.connector</groupId>
+  <artifactId>ekzo-connectors-parent</artifactId>
+  <name>ekzo-connectors-parent</name>
+  <description>Parent POM for EKZO Connectors implementations</description>
+  <packaging>pom</packaging>
+  <version>0.1.0-SNAPSHOT</version>
+
+  <modules>
+    <module>ekzo-connectors-application</module>
+    <module>ekzo-connector-inbound-graphql</module>
+  </modules>
+
+  <properties>
+    <version.java>21</version.java>
+    <maven.compiler.target>${version.java}</maven.compiler.target>
+    <maven.compiler.source>${version.java}</maven.compiler.source>
+
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+
+    <!-- connector SDK version -->
+    <version.connectors>8.4.9</version.connectors>
+
+    <version.spring-boot>3.2.2</version.spring-boot>
+    <version.spring-cloud-gcp-starter-logging>4.9.1</version.spring-cloud-gcp-starter-logging>
+    <version.logback>1.4.14</version.logback>
+    <version.micrometer>1.12.2</version.micrometer>
+
+    <!-- external libraries -->
+    <version.assertj>3.24.2</version.assertj>
+    <version.junit-jupiter>5.10.1</version.junit-jupiter>
+    <version.mockito>5.8.0</version.mockito>
+    <version.slf4j>2.0.9</version.slf4j>
+    <version.google-http-client>1.43.3</version.google-http-client>
+    <version.google-auth>1.20.0</version.google-auth>
+    <version.apache-httpcore>4.4.16</version.apache-httpcore>
+    <version.apache-commons>1.11.0</version.apache-commons>
+    <version.janino>3.1.11</version.janino>
+
+    <!-- maven plugins -->
+    <plugin.version.maven-clean-plugin>3.3.2</plugin.version.maven-clean-plugin>
+    <plugin.version.maven-compiler-plugin>3.11.0</plugin.version.maven-compiler-plugin>
+    <plugin.version.maven-dependency-plugin>3.6.1</plugin.version.maven-dependency-plugin>
+    <plugin.version.maven-install-plugin>3.1.1</plugin.version.maven-install-plugin>
+    <plugin.version.maven-jar-plugin>3.3.0</plugin.version.maven-jar-plugin>
+    <plugin.version.maven-resources-plugin>3.3.1</plugin.version.maven-resources-plugin>
+    <plugin.version.maven-shade-plugin>3.5.1</plugin.version.maven-shade-plugin>
+    <plugin.version.maven-surefire-plugin>3.2.2</plugin.version.maven-surefire-plugin>
+  </properties>
+
+  <dependencies>
+    <dependency>
+      <groupId>io.camunda.connector</groupId>
+      <artifactId>connector-core</artifactId>
+      <version>${version.connectors}</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.camunda.connector</groupId>
+      <artifactId>connector-validation</artifactId>
+      <version>${version.connectors}</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+      <version>${version.slf4j}</version>
+    </dependency>
+
+    <!-- Element template generator annotations (compile-time only) -->
+    <dependency>
+      <groupId>io.camunda.connector</groupId>
+      <artifactId>element-template-generator-core</artifactId>
+      <version>${version.connectors}</version>
+      <optional>true</optional>
+    </dependency>
+
+    <!-- test dependencies -->
+    <dependency>
+      <groupId>io.camunda.connector</groupId>
+      <artifactId>connector-test</artifactId>
+      <version>${version.connectors}</version>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <version>${version.junit-jupiter}</version>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-junit-jupiter</artifactId>
+      <version>${version.mockito}</version>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.assertj</groupId>
+      <artifactId>assertj-core</artifactId>
+      <version>${version.assertj}</version>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-jdk14</artifactId>
+      <version>${version.slf4j}</version>
+      <scope>test</scope>
+    </dependency>
+
+    <!-- for testing connectors locally in bundle with runtime -->
+    <dependency>
+      <groupId>io.camunda.connector</groupId>
+      <artifactId>spring-boot-starter-camunda-connectors</artifactId>
+      <version>${version.connectors}</version>
+      <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>ch.qos.logback</groupId>
+          <artifactId>logback-classic</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>io.camunda.connector</groupId>
+          <artifactId>element-template-generator-maven-plugin</artifactId>
+          <version>${project.version}</version>
+          <executions>
+            <execution>
+              <goals>
+                <goal>generate-templates</goal>
+              </goals>
+            </execution>
+          </executions>
+        </plugin>
+
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-shade-plugin</artifactId>
+          <executions>
+            <execution>
+              <!--This must be named-->
+              <id>shade</id>
+              <phase>package</phase>
+              <goals>
+                <goal>shade</goal>
+              </goals>
+            </execution>
+          </executions>
+          <configuration>
+            <skip>false</skip>
+            <relocations>
+              <!-- common relocation for all OOTB connectors -->
+              <relocation>
+                <pattern>com.fasterxml.jackson</pattern>
+                <shadedPattern>connector.com.fasterxml.jackson</shadedPattern>
+              </relocation>
+            </relocations>
+          </configuration>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+
+    <plugins>
+      <plugin>
+        <!-- This declaration makes sure children get plugin in their lifecycle -->
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-shade-plugin</artifactId>
+        <!-- Configuration won't be propagated to children -->
+        <inherited>false</inherited>
+        <executions>
+          <execution>
+            <!--This matches and thus overrides execution defined above -->
+            <id>shade</id>
+            <!-- Unbind from lifecycle for this POM -->
+            <phase>none</phase>
+          </execution>
+        </executions>
+        <configuration>
+          <skip>true</skip>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+
+  <repositories>
+    <repository>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+      <id>connectors</id>
+      <name>Connectors Repository</name>
+      <url>https://artifacts.camunda.com/artifactory/connectors/</url>
+    </repository>
+
+    <repository>
+      <releases>
+        <enabled>false</enabled>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+      <id>connectors-snapshots</id>
+      <name>Connectors Snapshot Repository</name>
+      <url>https://artifacts.camunda.com/artifactory/connectors-snapshots/</url>
+    </repository>
+    <repository>
+      <id>jitpack.io</id>
+      <url>https://jitpack.io</url>
+    </repository>
+  </repositories>
+
+  <pluginRepositories>
+    <pluginRepository>
+      <id>connectors</id>
+      <name>Connectors Repository</name>
+      <url>https://artifacts.camunda.com/artifactory/connectors/</url>
+    </pluginRepository>
+
+    <pluginRepository>
+      <id>connectors-snapshots</id>
+      <name>Connectors Snapshot Repository</name>
+      <url>https://artifacts.camunda.com/artifactory/connectors-snapshots/</url>
+    </pluginRepository>
+  </pluginRepositories>
+
+</project>
