@@ -26,4 +26,5 @@ ADD https://repo1.maven.org/maven2/io/camunda/connector/connector-aws-lambda/${C
 ADD https://repo1.maven.org/maven2/io/camunda/connector/connector-google-sheets/${CAMUNDA_CONNECTORS_VERSION}/connector-google-sheets-${CAMUNDA_CONNECTORS_VERSION}-with-dependencies.jar /opt/app/
 ADD https://repo1.maven.org/maven2/io/camunda/connector/connector-webhook/${CAMUNDA_CONNECTORS_VERSION}/connector-webhook-${CAMUNDA_CONNECTORS_VERSION}-with-dependencies.jar /opt/app/
 
+ARG EKZO_CONNECTORS_VERSION
 ADD ekzo-connector-inbound-graphql/target/ekzo-connector-inbound-graphql-${EKZO_CONNECTORS_VERSION}.jar /opt/app/
