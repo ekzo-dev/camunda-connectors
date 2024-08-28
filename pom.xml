@@ -129,13 +129,13 @@
             </execution>
           </executions>
         </plugin>
-
+<!--
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-shade-plugin</artifactId>
           <executions>
             <execution>
-              <!--This must be named-->
+              &lt;!&ndash;This must be named&ndash;&gt;
               <id>shade</id>
               <phase>package</phase>
               <goals>
@@ -146,13 +146,13 @@
           <configuration>
             <skip>false</skip>
             <relocations>
-              <!-- common relocation for all OOTB connectors -->
+              &lt;!&ndash; common relocation for all OOTB connectors &ndash;&gt;
               <relocation>
                 <pattern>com.fasterxml.jackson</pattern>
                 <shadedPattern>connector.com.fasterxml.jackson</shadedPattern>
               </relocation>
             </relocations>
-            <!-- Additional configuration. -->
+            &lt;!&ndash; Additional configuration. &ndash;&gt;
             <filters>
               <filter>
                 <artifact>*:*</artifact>
@@ -165,21 +165,23 @@
             </filters>
           </configuration>
         </plugin>
+-->
       </plugins>
     </pluginManagement>
 
+<!--
     <plugins>
       <plugin>
-        <!-- This declaration makes sure children get plugin in their lifecycle -->
+        &lt;!&ndash; This declaration makes sure children get plugin in their lifecycle &ndash;&gt;
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-shade-plugin</artifactId>
-        <!-- Configuration won't be propagated to children -->
+        &lt;!&ndash; Configuration won't be propagated to children &ndash;&gt;
         <inherited>false</inherited>
         <executions>
           <execution>
-            <!--This matches and thus overrides execution defined above -->
+            &lt;!&ndash;This matches and thus overrides execution defined above &ndash;&gt;
             <id>shade</id>
-            <!-- Unbind from lifecycle for this POM -->
+            &lt;!&ndash; Unbind from lifecycle for this POM &ndash;&gt;
             <phase>none</phase>
           </execution>
         </executions>
@@ -188,6 +190,7 @@
         </configuration>
       </plugin>
     </plugins>
+-->
   </build>
 
   <repositories>

@@ -31,6 +31,7 @@ public class ProcessInstancesFetcherTask implements Runnable {
     public ProcessInstancesFetcherTask(
             final InboundIntermediateConnectorContext context,
             final SharedExecutorService executorService) {
+        LOGGER.debug("new {}()", getClass().getSimpleName());
         this.config = context.bindProperties(PollingIntervalConfiguration.class);
         this.context = context;
         this.executorService = executorService;
@@ -39,10 +40,12 @@ public class ProcessInstancesFetcherTask implements Runnable {
 
     @Override
     public void run() {
+        LOGGER.debug("{}.run()", getClass().getSimpleName());
         try {
             List<ProcessInstanceContext> processInstanceContexts = context.getProcessInstanceContexts();
             if (processInstanceContexts != null) {
                 removeInactiveTasks(processInstanceContexts);
+                LOGGER.debug("processes: {}", processInstanceContexts.size());
                 processInstanceContexts.forEach(this::scheduleRequest);
             }
         } catch (Exception e) {
@@ -68,9 +71,11 @@ public class ProcessInstancesFetcherTask implements Runnable {
 
     private void scheduleRequest(ProcessInstanceContext processInstanceContext) {
         String taskKey = getRequestTaskKey(processInstanceContext);
+        LOGGER.debug("Scheduling request for {}", taskKey);
         runningGraphqlRequestTaskIds.computeIfAbsent(
                 taskKey,
                 (key) -> {
+                    LOGGER.debug("Creating new task for context: {}", processInstanceContext);
                     var task = new GraphQlRequestTask(processInstanceContext);
                     return this.executorService
                             .getExecutorService()
@@ -83,6 +88,7 @@ public class ProcessInstancesFetcherTask implements Runnable {
     }
 
     public void start() {
+        LOGGER.debug("{}.start()", getClass().getSimpleName());
         executorService
                 .getExecutorService()
                 .scheduleWithFixedDelay(
@@ -90,6 +96,7 @@ public class ProcessInstancesFetcherTask implements Runnable {
     }
 
     public void stop() {
+        LOGGER.debug("{}.stop()", getClass().getSimpleName());
         runningGraphqlRequestTaskIds.values().forEach(task -> task.cancel(true));
     }
 }

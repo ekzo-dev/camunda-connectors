@@ -10,7 +10,7 @@ COPY start.sh /start.sh
 RUN chmod +x start.sh
 
 # Copy Connector runtime from local build
-COPY target/ekzo-connectors-application-*.jar /opt/app/
+COPY target/ekzo-connectors-application-*.jar /opt/app/ekzo-connectors-application.jar
 
 # Create an unprivileged user / group and switch to that user
 RUN groupadd --gid 1001 camunda && useradd --no-create-home --gid 1001 --uid 1001 camunda

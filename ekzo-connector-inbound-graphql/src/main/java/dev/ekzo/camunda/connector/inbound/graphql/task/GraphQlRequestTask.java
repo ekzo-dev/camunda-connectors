@@ -91,6 +91,7 @@ public class GraphQlRequestTask implements Runnable {
                               GsonFactory gsonFactory,
                               HttpRequestFactory requestFactory,
                               String proxyFunctionUrl) {
+        LOGGER.debug("new {}()", getClass().getSimpleName());
         this.processInstanceContext = processInstanceContext;
         this.objectMapper = objectMapper;
         this.gsonFactory = gsonFactory;
@@ -109,11 +110,13 @@ public class GraphQlRequestTask implements Runnable {
 
     @Override
     public void run() {
+        LOGGER.debug("Running GraphQlRequestTask");
         try {
             var wrapper = processInstanceContext.bind(EkzoGraphQLRequestWrapper.class);
 //      HttpCommonRequest httpRequest = processInstanceContext.bind(HttpCommonRequest.class);
             if (wrapper != null) {
                 try {
+                    LOGGER.debug("Preparing GraphQL request");
 
                     GraphQLRequest graphQLRequest = prepareRequest(wrapper);
                     var result = StringUtils.isBlank(proxyFunctionUrl)

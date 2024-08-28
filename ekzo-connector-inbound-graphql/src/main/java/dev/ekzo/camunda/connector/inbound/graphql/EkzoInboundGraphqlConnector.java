@@ -28,11 +28,13 @@ public class EkzoInboundGraphqlConnector
 
   public EkzoInboundGraphqlConnector(
       final SharedExecutorService executorService) {
+    LOGGER.debug("{} init", getClass().getSimpleName());
     this.executorService = executorService;
   }
 
   @Override
   public void activate(final InboundIntermediateConnectorContext context) {
+    LOGGER.debug("{} activate", getClass().getSimpleName());
     processInstancesFetcherTask = new ProcessInstancesFetcherTask(context, executorService);
     processInstancesFetcherTask.start();
   }

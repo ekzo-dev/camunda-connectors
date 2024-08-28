@@ -16,4 +16,5 @@ if [[ -n ${DEBUG_JVM_PRINT_JAVA_OPTS} ]]; then
   echo "Applied JVM options: $JAVA_OPTS"
 fi
 
-exec java ${JAVA_OPTS} -cp "/opt/app/*:/opt/custom/*" "dev.ekzo.camunda.connector.runtime.app.ConnectorRuntimeApplication"
+#exec java ${JAVA_OPTS} -cp "/opt/app/*:/opt/custom/*" "dev.ekzo.camunda.connector.runtime.app.ConnectorRuntimeApplication"
+exec java ${JAVA_OPTS} -jar "/opt/app/ekzo-connectors-application.jar"
