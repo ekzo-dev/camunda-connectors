@@ -19,6 +19,12 @@
   <dependencies>
     <dependency>
       <groupId>io.camunda.connector</groupId>
+      <artifactId>connector-core</artifactId>
+      <version>${version.connectors}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>io.camunda.connector</groupId>
       <artifactId>connector-http-base</artifactId>
       <version>${version.connectors}</version>
     </dependency>

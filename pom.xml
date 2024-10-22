@@ -24,7 +24,7 @@
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
     <!-- connector SDK version -->
-    <version.connectors>8.4.10</version.connectors>
+    <version.connectors>8.6.2</version.connectors>
 
     <!-- spring framework version -->
     <version.spring-boot>3.3.0</version.spring-boot>

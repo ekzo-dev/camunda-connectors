@@ -3,13 +3,6 @@ package dev.ekzo.camunda.connector.inbound.graphql.task;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.api.client.http.GenericUrl;
-import com.google.api.client.http.HttpContent;
-import com.google.api.client.http.HttpHeaders;
-import com.google.api.client.http.HttpRequestFactory;
-import com.google.api.client.http.HttpResponse;
-import com.google.api.client.http.json.JsonHttpContent;
-import com.google.api.client.json.gson.GsonFactory;
 import com.google.gson.JsonObject;
 import com.hosopy.actioncable.ActionCable;
 import com.hosopy.actioncable.Channel;
@@ -21,39 +14,24 @@ import dev.ekzo.camunda.connector.inbound.graphql.model.EkzoGraphQLResponseBody;
 import dev.ekzo.camunda.connector.inbound.graphql.model.EkzoGraphQLSubscribeResponseWrapper;
 import dev.ekzo.camunda.connector.inbound.graphql.model.Request;
 import dev.ekzo.camunda.connector.inbound.graphql.model.RequestStateChangedResponse;
-import io.camunda.connector.api.error.ConnectorException;
 import io.camunda.connector.api.inbound.ProcessInstanceContext;
 import io.camunda.connector.api.json.ConnectorsObjectMapperSupplier;
-import io.camunda.connector.http.base.auth.NoAuthentication;
-import io.camunda.connector.http.base.auth.OAuthAuthentication;
-import io.camunda.connector.http.base.constants.Constants;
+import io.camunda.connector.http.base.HttpService;
 import io.camunda.connector.http.base.model.HttpCommonRequest;
 import io.camunda.connector.http.base.model.HttpCommonResult;
 import io.camunda.connector.http.base.model.HttpMethod;
-import io.camunda.connector.http.base.services.AuthenticationService;
-import io.camunda.connector.http.base.services.HttpInteractionService;
-import io.camunda.connector.http.base.services.HttpProxyService;
-import io.camunda.connector.http.base.services.HttpRequestMapper;
-import io.camunda.connector.http.graphql.components.HttpTransportComponentSupplier;
+import io.camunda.connector.http.base.model.auth.NoAuthentication;
 import io.camunda.connector.http.graphql.model.GraphQLRequest;
-import io.camunda.connector.http.graphql.model.GraphQLResult;
 import io.camunda.connector.http.graphql.utils.GraphQLRequestMapper;
-import io.camunda.connector.http.graphql.utils.JsonSerializeHelper;
 import lombok.SneakyThrows;
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
-
-import static io.camunda.connector.http.base.utils.Timeout.setTimeout;
 
 public class GraphQlRequestTask implements Runnable {
     private static final Logger LOGGER = LoggerFactory.getLogger(GraphQlRequestTask.class);
@@ -80,32 +58,21 @@ public class GraphQlRequestTask implements Runnable {
     private final ProcessInstanceContext processInstanceContext;
 
     private final ObjectMapper objectMapper;
-    private final GsonFactory gsonFactory;
-    private final HttpRequestFactory requestFactory;
-
-    private final String proxyFunctionUrl;
+    private final HttpService httpService;
+    private final GraphQLRequestMapper graphQLRequestMapper;
 
 
     public GraphQlRequestTask(ProcessInstanceContext processInstanceContext,
-                              ObjectMapper objectMapper,
-                              GsonFactory gsonFactory,
-                              HttpRequestFactory requestFactory,
-                              String proxyFunctionUrl) {
+                              ObjectMapper objectMapper) {
         LOGGER.debug("new {}()", getClass().getSimpleName());
         this.processInstanceContext = processInstanceContext;
         this.objectMapper = objectMapper;
-        this.gsonFactory = gsonFactory;
-        this.requestFactory = requestFactory;
-        this.proxyFunctionUrl = proxyFunctionUrl;
+        this.httpService = new HttpService();
+        this.graphQLRequestMapper = new GraphQLRequestMapper(objectMapper);
     }
 
     public GraphQlRequestTask(ProcessInstanceContext processInstanceContext) {
-        this(
-                processInstanceContext,
-                ConnectorsObjectMapperSupplier.getCopy(),
-                new GsonFactory(),
-                HttpTransportComponentSupplier.httpRequestFactoryInstance(),
-                System.getenv(Constants.PROXY_FUNCTION_URL_ENV_NAME));
+        this(processInstanceContext, ConnectorsObjectMapperSupplier.getCopy());
     }
 
     @Override
@@ -113,21 +80,18 @@ public class GraphQlRequestTask implements Runnable {
         LOGGER.debug("Running GraphQlRequestTask");
         try {
             var wrapper = processInstanceContext.bind(EkzoGraphQLRequestWrapper.class);
-//      HttpCommonRequest httpRequest = processInstanceContext.bind(HttpCommonRequest.class);
             if (wrapper != null) {
                 try {
                     LOGGER.debug("Preparing GraphQL request");
 
                     GraphQLRequest graphQLRequest = prepareRequest(wrapper);
-                    var result = StringUtils.isBlank(proxyFunctionUrl)
-                            ? executeGraphQLConnector(graphQLRequest)
-                            : executeGraphQLConnectorViaProxy(graphQLRequest);
+                    var result = executeGraphQLConnector(graphQLRequest);
                     LOGGER.info("GRAPHQL RESULT: {}", result);
 
                     Object aCorrelationId = ((Map) wrapper.getGraphql().getParams()).get("aCorrelationId");
                     LOGGER.info("Got aCorrelationId param: {}", aCorrelationId);
 
-                    Request requestResult = extractRequestResult(result.getBody());
+                    Request requestResult = extractRequestResult(result.body());
                     if (requestResult != null) {
                         if (EkzoGraphQLResponseBody.QUEUED.equals(requestResult.getState())) {
 
@@ -284,19 +248,21 @@ public class GraphQlRequestTask implements Runnable {
     }
 
     private GraphQLRequest prepareRequest(EkzoGraphQLRequestWrapper wrapper) {
-        var graphQLRequest = new GraphQLRequest();
-        graphQLRequest.setAuthentication(new NoAuthentication());
-        graphQLRequest.setUrl(System.getenv(ENV_GRAPHQL_ENDPOINT));
-        graphQLRequest.setMethod(HttpMethod.POST);
-        graphQLRequest.setConnectionTimeoutInSeconds(5);
         EkzoConnectParams variables = EkzoConnectParams.of(
                 wrapper.getGraphql().getEndpointSlug(),
                 prepareParams(wrapper.getGraphql().getParams()),
                 null);
 //              UUID.randomUUID().toString());
-        graphQLRequest.setQuery(wrapper.getGraphql().getQuery());
-        graphQLRequest.setVariables(objectMapper.convertValue(variables, Map.class));
-        return graphQLRequest;
+        return new GraphQLRequest(
+                new GraphQLRequest.GraphQL(
+                        wrapper.getGraphql().getQuery(),
+                        objectMapper.convertValue(variables, Map.class),
+                        HttpMethod.POST,
+                        System.getenv(ENV_GRAPHQL_ENDPOINT),
+                        Collections.emptyMap(),
+                        5
+                ),
+                new NoAuthentication());
     }
 
     private Object prepareParams(Object params) {
@@ -312,67 +278,15 @@ public class GraphQlRequestTask implements Runnable {
         return params;
     }
 
-    private GraphQLResult executeGraphQLConnector(final GraphQLRequest connectorRequest)
-            throws IOException, InstantiationException, IllegalAccessException {
+    private HttpCommonResult executeGraphQLConnector(final GraphQLRequest graphQLRequest) {
         // connector logic
-        LOGGER.debug("Executing graphql connector with request {}", connectorRequest);
-        HttpInteractionService httpInteractionService = new HttpInteractionService(objectMapper);
-        String bearerToken = null;
-        if (connectorRequest.getAuthentication() != null
-                && connectorRequest.getAuthentication() instanceof OAuthAuthentication) {
-            AuthenticationService authService = new AuthenticationService(objectMapper, requestFactory);
-            final com.google.api.client.http.HttpRequest oauthRequest =
-                    authService.createOAuthRequest(connectorRequest);
-            final HttpResponse oauthResponse = httpInteractionService.executeHttpRequest(oauthRequest);
-            bearerToken = authService.extractOAuthAccessToken(oauthResponse);
-        }
+        LOGGER.debug("Executing graphql connector with request {}", graphQLRequest);
 
-        final com.google.api.client.http.HttpRequest httpRequest =
-                createRequest(connectorRequest, bearerToken);
-        HttpResponse httpResponse = httpInteractionService.executeHttpRequest(httpRequest);
-        return httpInteractionService.toHttpResponse(httpResponse, GraphQLResult.class);
+        HttpCommonRequest commonRequest = graphQLRequestMapper.toHttpCommonRequest(graphQLRequest);
+        HttpCommonResult result = httpService.executeConnectorRequest(commonRequest);
+
+        LOGGER.debug("Graphql result {}", result);
+        return result;
     }
 
-    private HttpCommonResult executeGraphQLConnectorViaProxy(GraphQLRequest request)
-            throws IOException {
-        HttpCommonRequest commonRequest = GraphQLRequestMapper.toHttpCommonRequest(request);
-        HttpInteractionService httpInteractionService = new HttpInteractionService(objectMapper);
-
-        com.google.api.client.http.HttpRequest httpRequest =
-                HttpProxyService.toRequestViaProxy(requestFactory, commonRequest, proxyFunctionUrl);
-
-        HttpResponse httpResponse = httpInteractionService.executeHttpRequest(httpRequest, true);
-
-        try (InputStream responseContentStream = httpResponse.getContent();
-             Reader reader = new InputStreamReader(responseContentStream)) {
-            final HttpCommonResult jsonResult = objectMapper.readValue(reader, HttpCommonResult.class);
-            LOGGER.debug("Proxy returned result: " + jsonResult);
-            return jsonResult;
-        } catch (final Exception e) {
-            LOGGER.debug("Failed to parse external response: {}", httpResponse, e);
-            throw new ConnectorException("Failed to parse result: " + e.getMessage(), e);
-        }
-    }
-
-    public com.google.api.client.http.HttpRequest createRequest(
-            final GraphQLRequest request, String bearerToken) throws IOException {
-        final GenericUrl genericUrl = new GenericUrl(request.getUrl());
-        HttpContent content = null;
-        final HttpHeaders headers = HttpRequestMapper.createHeaders(request, bearerToken);
-        final Map<String, Object> queryAndVariablesMap =
-                JsonSerializeHelper.queryAndVariablesToMap(request);
-        if (HttpMethod.POST.equals(request.getMethod())) {
-            content = new JsonHttpContent(gsonFactory, queryAndVariablesMap);
-        } else {
-            genericUrl.putAll(queryAndVariablesMap);
-        }
-
-        final var httpRequest =
-                requestFactory.buildRequest(request.getMethod().name(), genericUrl, content);
-        httpRequest.setFollowRedirects(false);
-        setTimeout(request, httpRequest);
-        httpRequest.setHeaders(headers);
-
-        return httpRequest;
-    }
 }
