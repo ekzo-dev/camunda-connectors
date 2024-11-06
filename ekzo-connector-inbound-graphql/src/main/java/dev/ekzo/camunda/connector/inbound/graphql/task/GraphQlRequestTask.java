@@ -39,7 +39,7 @@ public class GraphQlRequestTask implements Runnable {
     private static final String ENV_GRAPHQL_ENDPOINT = "EKZO_CONNECT_GRAPHQL_ENDPOINT";
     private static final String ENV_GRAPHQL_WEBSOCKET_ENDPOINT = "EKZO_CONNECT_GRAPHQL_WEBSOCKET_ENDPOINT";
     private static final TypeReference<EkzoGraphQLSubscribeResponseWrapper<RequestStateChangedResponse>> REQUEST_STATE_CHANGED_TYPE = new TypeReference<>() { };
-    private static final String QUERY_TEMPLATE = "subscription RequestFinishedSubscription($id: Int!) {\n" +
+    private static final String QUERY_TEMPLATE = "subscription RequestFinishedSubscription($id: ID!) {\n" +
             "    requestStateChanged(id: $id) {\n" +
             "        request {\n" +
             "            id\n" +
@@ -130,7 +130,7 @@ public class GraphQlRequestTask implements Runnable {
     }
 
     @SneakyThrows({URISyntaxException.class})
-    private void subscribeForResult(GraphQLRequest graphQLRequest, Integer id, Object aCorrelationId, ProcessInstanceContext processInstanceContext) {
+    private void subscribeForResult(GraphQLRequest graphQLRequest, String id, Object aCorrelationId, ProcessInstanceContext processInstanceContext) {
         LOGGER.info("Subscribing for result for request id {}", id);
         
         URI uri = new URI(System.getenv(ENV_GRAPHQL_WEBSOCKET_ENDPOINT));

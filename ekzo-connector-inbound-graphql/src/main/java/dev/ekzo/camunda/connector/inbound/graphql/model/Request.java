@@ -15,7 +15,7 @@ public class Request {
     public static final String STATE_ERROR = "error";
     public static final String STATE_SUCCESS = "success";
 
-    private Integer id;
+    private String id;
     private String state;
     private Object result;
     private List<Object> responseAttachments;
